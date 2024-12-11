@@ -62,6 +62,15 @@ def get_vpc_id_list(region)->list:
     print(vpc_id_list)
     return vpc_id_list
 
+@app.get('/vpcs/{region}')
+def get_vpcs(request: Request, region: str):
+     ec2_conn = boto3.client('ec2',region_name=region)
+     all_vpcs = ec2_conn.describe_vpcs().get('Vpcs')
+     vpc_id = [VPC['VpcId'] for VPC in all_vpcs]
+     vpc_cidr = [VPC['CidrBlock'] for VPC in all_vpcs]
+     vpc_info = dict(zip(vpc_id, vpc_cidr))
+     return templates.TemplateResponse("vpc.html", {"request": request, "name": "VPC INFO", "vpc_dict": vpc_info})    
+
 @app.get("/s3")
 def get_s3_buckets(region)->list:
     s3 = boto3.client('s3', region_name=region)

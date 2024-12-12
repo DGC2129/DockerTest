@@ -3,19 +3,21 @@ LABEL author="Sreeharsha Veerapalli" email="sreeharshav@gmail.com"
 WORKDIR /app
 #ENV AWS_DEFAULT_REGION=us-east-1
 #ENV AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-##ENV AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+#ENV AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+ARG T_VERSION=1.9.1
 COPY requirements.txt requirements.txt
 COPY main.py main.py
 ADD templates templates
 RUN apt update && apt install -y python3-pip jq net-tools tree unzip
 RUN pip install -r requirements.txt
-ENV T_VERSION=1.9.1
-ADD https://releases.hashicorp.com/terraform/1.9.1/terraform_${T_VERSION}_linux_amd64.zip terraform_${T_VERSION}_linux_amd64.zip
+ADD https://releases.hashicorp.com/terraform/${T_VERSION}/terraform_${T_VERSION}_linux_amd64.zip terraform_${T_VERSION}_linux_amd64.zip
 RUN unzip terraform_${T_VERSION}_linux_amd64.zip \
     && rm -rf terraform_${T_VERSION}_linux_amd64.zip \
     && mv terraform /usr/local/bin/ \
     && chmod +x /usr/local/bin/terraform \
     && terraform --version
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
 EXPOSE 80 8000 8080 5000
 ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0"]
 CMD ["--port", "80"]
